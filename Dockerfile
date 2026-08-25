@@ -11,6 +11,7 @@ COPY --from=build /app/node_modules ./node_modules
 COPY package.json ./
 COPY src ./src
 COPY scripts ./scripts
+COPY app-icon.png ./app-icon.png
 RUN mkdir -p /data && chown node:node /data
 USER node
 EXPOSE 3000
