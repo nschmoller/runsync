@@ -6,7 +6,7 @@
   "engines": { "node": ">=24" },
   "scripts": {
     "start": "node src/server.js",
-    "test": "node --test test/*.test.js",
+    "test": "node --test test/**/*.test.js test/*.test.js",
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm test",
     "mint-invite": "node scripts/mint-invite.js",
