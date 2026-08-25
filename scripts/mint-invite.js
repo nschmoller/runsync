@@ -1,0 +1,3 @@
+import crypto from 'node:crypto';
+import { loadConfig } from '../src/config.js'; import { openDatabase } from '../src/adapters/store/connection.js'; import { createInviteStore } from '../src/adapters/store/invites.js'; import { INVITE_TTL_SECONDS } from '../src/web/routes/connect.js';
+const config = loadConfig(); const db = openDatabase(config.dbPath); const now = Math.floor(Date.now() / 1000); const token = crypto.randomBytes(32).toString('hex'); createInviteStore(db).create({ token, now, expiresAt: now + INVITE_TTL_SECONDS }); db.close(); console.log(`${config.baseUrl}/connect?invite=${token}`);
