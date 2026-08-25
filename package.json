@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=24" },
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
     "start": "node src/server.js",
     "test": "node --test test/**/*.test.js test/*.test.js",
@@ -13,7 +15,7 @@
     "create-subscription": "node scripts/create-subscription.js"
   },
   "dependencies": {
-    "better-sqlite3": "^11.5.0",
+    "better-sqlite3": "^13.0.3",
     "cookie": "^1.0.1",
     "express": "^5.0.1"
   },
