@@ -6126,12 +6126,7 @@ Tests use the built-in `node:test` runner and never touch the network:
 
 - [x] **Step 4: Run the full suite one last time** — DONE 2026-08-25, under Node 24.19.0 with `better-sqlite3@13.0.3`. `npm run check`: typecheck clean, 157 tests, 0 failures. (157, not 233 — the self-review's cumulative count table was a plan-time estimate; every task's actual test list was implemented and passes, and per the plan's own note, the count itself is not the thing that matters.)
 
-- [ ] **Step 5: Commit**
-
-```bash
-git add Dockerfile .dockerignore README.md
-git commit -m "feat: Docker packaging and deployment runbook"
-```
+- [x] **Step 5: Commit** — already done in `c68380c feat: container scripts and Docker packaging`.
 
 - [ ] **Step 6: Manual end-to-end verification** — NOT DONE. Requires a real Strava API application, a publicly reachable deployment, and a test Strava account; none are available in this environment.
 
