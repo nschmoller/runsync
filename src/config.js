@@ -7,7 +7,10 @@ const REQUIRED = [
   'APPEND_MESSAGE',
   'SESSION_SECRET',
   'BASE_URL',
+  'SUPPORT_EMAIL',
 ];
+
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const DEFAULT_SPORT_TYPES = 'Run,TrailRun';
 const MIN_SECRET_LENGTH = 32;
@@ -46,6 +49,11 @@ export function loadConfig(env = process.env) {
     throw new Error(`LOG_LEVEL must be one of ${LOG_LEVELS.join(', ')}`);
   }
 
+  const supportEmail = /** @type {string} */ (env.SUPPORT_EMAIL);
+  if (!EMAIL_PATTERN.test(supportEmail)) {
+    throw new Error('SUPPORT_EMAIL must be a valid email address');
+  }
+
   return {
     clientId: /** @type {string} */ (env.STRAVA_CLIENT_ID),
     clientSecret: /** @type {string} */ (env.STRAVA_CLIENT_SECRET),
@@ -59,5 +67,6 @@ export function loadConfig(env = process.env) {
     dbPath: env.DB_PATH ?? './data.sqlite',
     adminAthleteIds,
     logLevel: /** @type {'debug'|'info'|'warn'|'error'} */ (logLevel),
+    supportEmail,
   };
 }

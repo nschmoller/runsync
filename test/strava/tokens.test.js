@@ -2,7 +2,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { testDb, makeAthlete, fixedClock, collectingLogger, NOW } from '../support/factories.js';
 import { createAthleteStore } from '../../src/adapters/store/athletes.js';
+import { createActivityStore } from '../../src/adapters/store/activities.js';
 import { createTokenProvider, REFRESH_SKEW_SECONDS } from '../../src/adapters/strava/tokens.js';
+import { createDataDeletionService } from '../../src/services/dataDeletionService.js';
 import { StravaError } from '../../src/adapters/strava/errors.js';
 
 /**
@@ -12,6 +14,7 @@ function setup({ refresh, athlete = {} } = {}) {
   const db = testDb();
   makeAthlete(db, athlete);
   const athleteStore = createAthleteStore(db);
+  const activityStore = createActivityStore(db);
   const calls = { refresh: 0, tokens: /** @type {string[]} */ ([]) };
   const logger = collectingLogger();
 
@@ -26,7 +29,10 @@ function setup({ refresh, athlete = {} } = {}) {
     },
   };
 
-  const tokens = createTokenProvider({ client, athleteStore, clock: fixedClock(NOW), logger });
+  const dataDeletionService = createDataDeletionService({
+    db, athleteStore, activityStore, strava: { async deauthorize() {} }, logger,
+  });
+  const tokens = createTokenProvider({ client, athleteStore, dataDeletionService, clock: fixedClock(NOW), logger });
   return { athleteStore, tokens, calls, logger };
 }
 
@@ -101,7 +107,12 @@ test('different athletes do not serialize against each other', async () => {
       return { accessToken: 'a', refreshToken: 'r', expiresAt: NOW + 21_600 };
     },
   };
-  const tokens = createTokenProvider({ client, athleteStore, clock: fixedClock(NOW), logger: collectingLogger() });
+  const activityStore = createActivityStore(db);
+  const logger = collectingLogger();
+  const dataDeletionService = createDataDeletionService({
+    db, athleteStore, activityStore, strava: { async deauthorize() {} }, logger,
+  });
+  const tokens = createTokenProvider({ client, athleteStore, dataDeletionService, clock: fixedClock(NOW), logger });
 
   const a1 = athleteStore.get(1);
   const a2 = athleteStore.get(2);
@@ -113,7 +124,7 @@ test('different athletes do not serialize against each other', async () => {
   assert.deepEqual(order, ['start', 'start', 'end', 'end'], 'per-athlete keys must not block each other');
 });
 
-test('a 401 marks the athlete revoked and rethrows', async () => {
+test('a 401 deletes the athlete\'s data and rethrows', async () => {
   const { athleteStore, tokens } = setup({
     athlete: { expiresAt: NOW + 60 },
     refresh: () => { throw new StravaError(401, 'Authorization Error'); },
@@ -125,12 +136,10 @@ test('a 401 marks the athlete revoked and rethrows', async () => {
     () => tokens.accessTokenFor(athlete),
     (error) => error instanceof StravaError && error.status === 401,
   );
-  const revoked = athleteStore.get(987654);
-  assert.ok(revoked);
-  assert.equal(revoked.status, 'revoked');
+  assert.equal(athleteStore.get(987654), undefined, 'a dead token must not leave data behind');
 });
 
-test('a non-auth failure rethrows without revoking — a 500 is not a revocation', async () => {
+test('a non-auth failure rethrows without deleting — a 500 is not a revocation', async () => {
   const { athleteStore, tokens } = setup({
     athlete: { expiresAt: NOW + 60 },
     refresh: () => { throw new StravaError(500, 'Server Error'); },

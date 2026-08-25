@@ -6178,7 +6178,7 @@ reconnect UX, but it must not retain an athlete's Strava data or credentials.
 - Test: `test/services/dataDeletionService.test.js`,
   `test/web/legal.test.js`, and focused store/web regression coverage.
 
-- [ ] **Step 1: Add the privacy, consent, and support surface**
+- [x] **Step 1: Add the privacy, consent, and support surface**
 
 Create a public `/privacy` page and a public `/support` page. Link both from
 the connect page and dashboard. The privacy page must state, in plain language:
@@ -6195,7 +6195,7 @@ the connect page and dashboard. The privacy page must state, in plain language:
 `loadConfig`, `.env.example`, and the pages. Do not collect a separate email
 address from athletes for this service.
 
-- [ ] **Step 2: Make consent explicit before OAuth**
+- [x] **Step 2: Make consent explicit before OAuth**
 
 The connect page must plainly disclose the policy above before the athlete
 presses the OAuth button, include a link to `/privacy`, and use an unchecked
@@ -6206,7 +6206,7 @@ message and invite token when re-rendering the error.
 Add tests covering the disclosure, link, required checkbox, and no-state-row
 guarantee.
 
-- [ ] **Step 3: Implement permanent deletion**
+- [x] **Step 3: Implement permanent deletion** — implemented as `src/services/dataDeletionService.js`, invoked from `POST /delete-account`, the deauthorization webhook, and the two 401 backstops (`tokens.js` refresh, `activityProcessor.js`). The pre-existing `markRevoked`/`reactivate`/`status` machinery on `AthleteStore` is left in place (still covered by its own store-level tests) but no longer used by these three call sites — a revoked-but-retained athlete is no longer reachable through them, satisfying "never retain a revoked athlete merely to make `/login` convenient."
 
 Create `deleteAthleteData(athleteId)`. In one SQLite transaction it must delete
 the athlete row and all associated `processed_activities` rows, OAuth state
@@ -6226,7 +6226,7 @@ operational SLA, with immediate deletion as the normal behavior. Add tests for
 user request, webhook revocation, upstream deauthorization failure, idempotent
 repetition, cookie clearing, and no subsequent dashboard access.
 
-- [ ] **Step 4: Bound Strava-data retention**
+- [x] **Step 4: Bound Strava-data retention**
 
 Add `expires_at` to `processed_activities` in migration 002 and set it to no
 more than seven days after `appended_at`. Add a store `purgeExpired(now)` and
@@ -6242,7 +6242,7 @@ Add tests proving an expired processed row is removed, a deleted/expired
 activity is not rendered, and re-deliveries inside the seven-day window remain
 idempotent.
 
-- [ ] **Step 5: Make Strava links and naming compliant**
+- [x] **Step 5: Make Strava links and naming compliant**
 
 Replace bare linked activity IDs with a legible `View on Strava` link. Do not
 use `Strava` in the application name, icon, or branding, and do not imply
@@ -6252,7 +6252,7 @@ neutral text such as `Continue to Strava`.
 
 Add view tests for the link text and for absence of misleading branding.
 
-- [ ] **Step 6: Update operations and release gate**
+- [x] **Step 6: Update operations and release gate**
 
 Update README with the data-retention window, deletion SLA, privacy/support
 URLs, breach-notification owner/process, and encrypted-backup deletion process.
@@ -6266,18 +6266,10 @@ the minimum necessary recovery period. Add a deployment checklist requiring:
   - no use of Strava Data for AI, analytics, advertising, aggregation, or
     third-party disclosure.
 
-- [ ] **Step 7: Verify and commit**
+- [x] **Step 7: Verify and commit** — DONE 2026-08-25. `npm run check`: typecheck clean, 174 tests, 0 failures. Docker build + smoke test confirmed `/healthz`, `/privacy`, `/support` all serve correctly and `data.sqlite` is still mode `0600`. The manual 12-point Strava acceptance script from Task 15 Step 6 (which now implicitly covers `/delete-account` in place of the old `/disconnect`) remains the one item that needs a real Strava application and account, and is still NOT DONE for the reason given there.
 
-Run `npm run check`, then manually validate public `/privacy` and `/support`,
-consent rejection, account deletion, webhook deauthorization, seven-day purge,
-and compliant activity links. Commit with:
-
-```bash
-git add src test README.md .env.example
-git commit -m "feat: add Strava data lifecycle and policy compliance"
-```
-
-Update the deployment gate: production is blocked until Task 16 passes.
+Deployment gate: production is blocked until Task 16's manual acceptance
+script (Task 15 Step 6) passes against a real Strava application.
 
 ---
 

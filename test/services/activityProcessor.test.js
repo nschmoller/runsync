@@ -4,6 +4,7 @@ import { testDb, testConfig, makeAthlete, fixedClock, collectingLogger, NOW } fr
 import { createAthleteStore } from '../../src/adapters/store/athletes.js';
 import { createActivityStore } from '../../src/adapters/store/activities.js';
 import { createActivityProcessor } from '../../src/services/activityProcessor.js';
+import { createDataDeletionService } from '../../src/services/dataDeletionService.js';
 import { activityJob } from '../../src/services/jobs.js';
 import { StravaError } from '../../src/adapters/strava/errors.js';
 
@@ -45,9 +46,12 @@ function setup({ activity = RUN, athlete = {}, config = {}, getActivity, updateA
   };
   /** @type {import('../../src/ports/index.js').TokenProvider} */
   const tokens = { async accessTokenFor(_athlete) { calls.token += 1; return 'token'; } };
+  const dataDeletionService = createDataDeletionService({
+    db, athleteStore, activityStore, strava: { async deauthorize() {} }, logger,
+  });
 
   const processor = createActivityProcessor({
-    athleteStore, activityStore, strava, tokens,
+    athleteStore, activityStore, strava, tokens, dataDeletionService,
     config: testConfig(config), clock: fixedClock(NOW), logger,
   });
 
@@ -172,17 +176,12 @@ test('logs the outcome with athlete and activity ids', async () => {
     e.event === 'activity.appended' && e.athleteId === 987654 && e.activityId === 555));
 });
 
-test('a 401 from Strava marks the athlete revoked, not just logged', async () => {
+test('a 401 from Strava deletes the athlete\'s data, not just logs it', async () => {
   const { processor, athleteStore } = setup({
     getActivity: () => { throw new StravaError(401, 'Unauthorized'); },
   });
 
   await assert.rejects(() => processor.process(activityJob(987654, 555)), /401/);
 
-  const athlete = athleteStore.get(987654);
-  assert.ok(athlete);
-  assert.equal(athlete.status, 'revoked');
-  assert.equal(athlete.revoked_at, NOW);
-  assert.ok(athlete.last_error);
-  assert.match(athlete.last_error, /401/);
+  assert.equal(athleteStore.get(987654), undefined, 'a dead token must not leave data behind');
 });

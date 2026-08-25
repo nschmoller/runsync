@@ -9,6 +9,7 @@ const valid = {
   APPEND_MESSAGE: '🏃 Synced via runsync',
   SESSION_SECRET: 'a'.repeat(32),
   BASE_URL: 'https://runsync.example.com',
+  SUPPORT_EMAIL: 'support@runsync.example.com',
 };
 
 test('loads a valid environment', () => {
@@ -64,4 +65,12 @@ test('rejects a non-numeric ADMIN_ATHLETE_IDS entry rather than silently ignorin
 
 test('rejects an unknown LOG_LEVEL', () => {
   assert.throws(() => loadConfig({ ...valid, LOG_LEVEL: 'chatty' }), /LOG_LEVEL/);
+});
+
+test('loads a valid SUPPORT_EMAIL', () => {
+  assert.equal(loadConfig(valid).supportEmail, 'support@runsync.example.com');
+});
+
+test('rejects a SUPPORT_EMAIL missing an @ or a domain', () => {
+  assert.throws(() => loadConfig({ ...valid, SUPPORT_EMAIL: 'not-an-email' }), /SUPPORT_EMAIL/);
 });

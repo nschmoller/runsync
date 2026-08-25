@@ -17,6 +17,7 @@
  * @property {string} dbPath
  * @property {Set<number>} adminAthleteIds
  * @property {'debug'|'info'|'warn'|'error'} logLevel
+ * @property {string} supportEmail
  */
 
 /**
@@ -103,6 +104,7 @@
  * @property {(athleteId: number, message: string, now: number) => void} recordError
  * @property {() => Athlete[]} list
  * @property {() => number} countActive
+ * @property {(athleteId: number) => void} remove  Permanent erasure — used only by data deletion, never by the revoke/reconnect path.
  */
 
 /**
@@ -112,6 +114,8 @@
  * @property {(activityId: number) => void} deleteProcessed
  * @property {(athleteId: number, limit: number) => Array<{activity_id:number,appended_at:number}>} recentFor
  * @property {() => number} count
+ * @property {(athleteId: number) => void} deleteForAthlete  Bulk erasure for a data deletion request.
+ * @property {(now: number) => number} purgeExpired  Deletes rows past their retention window; returns the count removed.
  */
 
 /**
@@ -140,5 +144,13 @@
  */
 
 /** @typedef {{ accessTokenFor: (athlete: Athlete) => Promise<string> }} TokenProvider */
+
+/**
+ * Permanent erasure — Strava deauthorization plus deletion of every row this
+ * service holds for the athlete. Idempotent: a second call on an already-gone
+ * athlete is a no-op, not an error.
+ * @typedef {object} DataDeletionService
+ * @property {(athleteId: number, context?: {reason?: string}) => Promise<void>} deleteAthleteData
+ */
 
 export {};

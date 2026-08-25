@@ -62,7 +62,7 @@ test('openDatabase reopens an existing database without re-migrating', () => {
     const db = openDatabase(file);
     const migrationsCountResult = db.prepare('SELECT COUNT(*) AS n FROM schema_migrations').get();
     // @ts-expect-error
-    assert.equal(migrationsCountResult.n, 1);
+    assert.equal(migrationsCountResult.n, 2);
     db.close();
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });

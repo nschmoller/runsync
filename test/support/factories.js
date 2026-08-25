@@ -52,6 +52,7 @@ export function testConfig(overrides = {}) {
     dbPath: ':memory:',
     adminAthleteIds: new Set(),
     logLevel: /** @type {const} */ ('info'),
+    supportEmail: 'support@runsync.example.com',
     ...overrides,
   };
 }

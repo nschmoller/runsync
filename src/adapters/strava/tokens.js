@@ -4,6 +4,7 @@ import { isAuthError } from './errors.js';
 /** @typedef {import('../../ports/index.js').Athlete} Athlete */
 /** @typedef {import('../../ports/index.js').AthleteStore} AthleteStore */
 /** @typedef {import('../../ports/index.js').Clock} Clock */
+/** @typedef {import('../../ports/index.js').DataDeletionService} DataDeletionService */
 /** @typedef {import('../../ports/index.js').Logger} Logger */
 /** @typedef {import('../../ports/index.js').StravaClient} StravaClient */
 /** @typedef {import('../../ports/index.js').TokenProvider} TokenProvider */
@@ -12,10 +13,10 @@ import { isAuthError } from './errors.js';
 export const REFRESH_SKEW_SECONDS = 300;
 
 /**
- * @param {{ client: Pick<StravaClient,'refresh'>, athleteStore: AthleteStore, clock: Clock, logger: Logger }} deps
+ * @param {{ client: Pick<StravaClient,'refresh'>, athleteStore: AthleteStore, dataDeletionService: DataDeletionService, clock: Clock, logger: Logger }} deps
  * @returns {TokenProvider}
  */
-export function createTokenProvider({ client, athleteStore, clock, logger }) {
+export function createTokenProvider({ client, athleteStore, dataDeletionService, clock, logger }) {
   const withAthleteLock = createKeyedLock();
 
   /** @param {Athlete} athlete */
@@ -25,8 +26,8 @@ export function createTokenProvider({ client, athleteStore, clock, logger }) {
       tokens = await client.refresh(athlete.refresh_token);
     } catch (error) {
       if (isAuthError(error)) {
-        athleteStore.markRevoked(athlete.athlete_id, clock.now());
         logger.warn('athlete.revoked', { athleteId: athlete.athlete_id, cause: 'refresh-401' });
+        await dataDeletionService.deleteAthleteData(athlete.athlete_id, { reason: 'refresh-401' });
       }
       throw error;
     }

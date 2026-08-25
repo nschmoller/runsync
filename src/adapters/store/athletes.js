@@ -46,6 +46,7 @@ export function createAthleteStore(db) {
     recordError: db.prepare('UPDATE athletes SET last_error = ?, last_error_at = ? WHERE athlete_id = ?'),
     list: db.prepare('SELECT * FROM athletes ORDER BY created_at DESC'),
     countActive: db.prepare(`SELECT COUNT(*) AS n FROM athletes WHERE status = 'active'`),
+    remove: db.prepare('DELETE FROM athletes WHERE athlete_id = ?'),
   };
 
   return {
@@ -86,5 +87,7 @@ export function createAthleteStore(db) {
     list: () => /** @type {Athlete[]} */ (statements.list.all()),
 
     countActive: () => /** @type {{n: number}} */ (statements.countActive.get()).n,
+
+    remove: (athleteId) => void statements.remove.run(athleteId),
   };
 }

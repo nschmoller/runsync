@@ -112,6 +112,21 @@ test('list and countActive support an owner view', () => {
   assert.equal(store.countActive(), 1);
 });
 
+test('remove permanently deletes the athlete row', () => {
+  const db = testDb();
+  makeAthlete(db);
+  const store = createAthleteStore(db);
+
+  store.remove(987654);
+  assert.equal(store.get(987654), undefined);
+});
+
+test('remove on an unknown athlete is a no-op, not an error', () => {
+  const db = testDb();
+  const store = createAthleteStore(db);
+  assert.doesNotThrow(() => store.remove(404404));
+});
+
 test('insert on an existing athlete refreshes tokens and reactivates, preserving their message and cutoff', () => {
   const db = testDb();
   makeAthlete(db, { message: 'mine', activityCutoff: 5000 });

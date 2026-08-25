@@ -1,10 +1,13 @@
+import { expiryFor } from '../../domain/retention.js';
+
 /** @typedef {import('better-sqlite3').Database} Database */
 /** @typedef {import('../../ports/index.js').ActivityStore} ActivityStore */
 
 /**
  * The durable idempotency record. Once an activity has a row here, the service
  * never touches it again — which is also what makes an athlete's deletion of
- * the message stick.
+ * the message stick. Rows are retained only for `RETENTION_SECONDS`
+ * (domain/retention.js), not indefinitely.
  * @param {Database} db
  * @returns {ActivityStore}
  */
@@ -12,10 +15,12 @@ export function createActivityStore(db) {
   const statements = {
     isProcessed: db.prepare('SELECT 1 FROM processed_activities WHERE activity_id = ?'),
     markProcessed: db.prepare(`
-      INSERT OR IGNORE INTO processed_activities (activity_id, athlete_id, appended_at)
-      VALUES (?, ?, ?)
+      INSERT OR IGNORE INTO processed_activities (activity_id, athlete_id, appended_at, expires_at)
+      VALUES (?, ?, ?, ?)
     `),
     deleteProcessed: db.prepare('DELETE FROM processed_activities WHERE activity_id = ?'),
+    deleteForAthlete: db.prepare('DELETE FROM processed_activities WHERE athlete_id = ?'),
+    purgeExpired: db.prepare('DELETE FROM processed_activities WHERE expires_at <= ?'),
     recentFor: db.prepare(`
       SELECT activity_id, appended_at FROM processed_activities
       WHERE athlete_id = ? ORDER BY appended_at DESC LIMIT ?
@@ -26,8 +31,10 @@ export function createActivityStore(db) {
   return {
     isProcessed: (activityId) => statements.isProcessed.get(activityId) !== undefined,
     markProcessed: (activityId, athleteId, now) =>
-      void statements.markProcessed.run(activityId, athleteId, now),
+      void statements.markProcessed.run(activityId, athleteId, now, expiryFor(now)),
     deleteProcessed: (activityId) => void statements.deleteProcessed.run(activityId),
+    deleteForAthlete: (athleteId) => void statements.deleteForAthlete.run(athleteId),
+    purgeExpired: (now) => statements.purgeExpired.run(now).changes,
     recentFor: (athleteId, limit) =>
       /** @type {Array<{activity_id:number,appended_at:number}>} */ (statements.recentFor.all(athleteId, limit)),
     count: () => /** @type {{n:number}} */ (statements.count.get()).n,

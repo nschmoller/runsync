@@ -6,6 +6,7 @@ import { isAuthError } from '../adapters/strava/errors.js';
 /** @typedef {import('../ports/index.js').AthleteStore} AthleteStore */
 /** @typedef {import('../ports/index.js').Clock} Clock */
 /** @typedef {import('../ports/index.js').Config} Config */
+/** @typedef {import('../ports/index.js').DataDeletionService} DataDeletionService */
 /** @typedef {import('../ports/index.js').Logger} Logger */
 /** @typedef {import('../ports/index.js').StravaClient} StravaClient */
 /** @typedef {import('../ports/index.js').TokenProvider} TokenProvider */
@@ -19,12 +20,13 @@ import { isAuthError } from '../adapters/strava/errors.js';
  *   activityStore: ActivityStore,
  *   strava: Pick<StravaClient,'getActivity'|'updateActivity'>,
  *   tokens: TokenProvider,
+ *   dataDeletionService: DataDeletionService,
  *   config: Config,
  *   clock: Clock,
  *   logger: Logger,
  * }} deps
  */
-export function createActivityProcessor({ athleteStore, activityStore, strava, tokens, config, clock, logger }) {
+export function createActivityProcessor({ athleteStore, activityStore, strava, tokens, dataDeletionService, config, clock, logger }) {
   /** @param {ActivityJob} job @returns {Promise<string>} */
   async function run({ athleteId, activityId }) {
     const log = logger.child({ athleteId, activityId });
@@ -76,13 +78,16 @@ export function createActivityProcessor({ athleteStore, activityStore, strava, t
         // Surfaced on the athlete's own dashboard, so a miss is visible to them
         // without anyone reading container logs.
         if (athleteStore.get(job.athleteId)) {
-          const now = clock.now();
-          athleteStore.recordError(job.athleteId, message, now);
           // The deauthorization webhook is not guaranteed to arrive, so a 401
-          // seen here is the backstop that stops a dead row failing forever.
+          // seen here is the backstop that stops a dead row failing forever —
+          // and, since we can no longer act on their behalf, erases it rather
+          // than keeping it around in a revoked-but-retained state. Recording
+          // the error would be pointless: the row is about to be gone.
           if (isAuthError(error)) {
-            athleteStore.markRevoked(job.athleteId, now);
             logger.warn('athlete.revoked', { athleteId: job.athleteId, cause: 'activity-401' });
+            await dataDeletionService.deleteAthleteData(job.athleteId, { reason: 'activity-401' });
+          } else {
+            athleteStore.recordError(job.athleteId, message, clock.now());
           }
         }
         throw error;
