@@ -106,6 +106,27 @@ test('a failing job never becomes an unhandled rejection', async () => {
   assert.deepEqual(seen, [], 'an unhandled rejection would kill the container');
 });
 
+test('a non-Error rejection reason never becomes an unhandled rejection', async () => {
+  /** @type {any[]} */
+  const seen = [];
+  const onUnhandled = (/** @type {any} */ reason) => seen.push(reason);
+  process.on('unhandledRejection', onUnhandled);
+  let logger;
+  try {
+    const setup_result = setup(async () => { return Promise.reject('string boom'); });
+    logger = setup_result.logger;
+    const dispatcher = setup_result.dispatcher;
+    dispatcher.dispatch(activityJob(1, 555));
+    await dispatcher.drain();
+    await tick();
+    await tick();
+  } finally {
+    process.off('unhandledRejection', onUnhandled);
+  }
+  assert.deepEqual(seen, [], 'an unhandled rejection would kill the container');
+  assert.ok(logger.entries.some((/** @type {any} */ e) => e.level === 'error' && e.event === 'job.failed'));
+});
+
 test('an unknown job type is logged and dropped rather than thrown at the caller', async () => {
   const { dispatcher, logger } = setup();
   assert.doesNotThrow(() => dispatcher.dispatch(/** @type {any} */ ({ type: 'unknown.thing' })));

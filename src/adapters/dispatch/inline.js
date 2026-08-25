@@ -36,7 +36,7 @@ export function createInlineDispatcher({ handlers, logger }) {
     const tracked = withJobLock(`activity:${job.activityId}`, () => handler(job))
       .then(
         (outcome) => logger.debug('job.done', { type: job.type, outcome }),
-        (error) => logger.error('job.failed', { type: job.type, error: error.message }),
+        (error) => logger.error('job.failed', { type: job.type, error: error instanceof Error ? error.message : String(error) }),
       );
 
     pending.add(tracked);
