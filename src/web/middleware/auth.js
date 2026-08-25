@@ -1,0 +1,7 @@
+import * as cookie from 'cookie';
+/** @param {{sessions:any, athleteStore: import('../../ports/index.js').AthleteStore, config: import('../../ports/index.js').Config, clock: import('../../ports/index.js').Clock, logger: import('../../ports/index.js').Logger}} deps */
+export function createAuth({ sessions, athleteStore, config, clock, logger }) { return {
+  requireAthlete(/** @type {any} */ req, /** @type {any} */ res, /** @type {any} */ next) { const value = cookie.parse(req.headers.cookie ?? '')[sessions.COOKIE_NAME]; const id = sessions.verify(value, clock.now()); const athlete = id === null ? undefined : athleteStore.get(id); if (!athlete) return res.redirect(302, '/login'); req.session = { athlete, cookieValue: value }; return next(); },
+  requireAdmin(/** @type {any} */ req, /** @type {any} */ res, /** @type {any} */ next) { const athleteId = req.session?.athlete?.athlete_id; if (!config.adminAthleteIds.has(athleteId)) { logger.warn('auth.admin-refused', { athleteId }); return res.status(403).type('text').send('Not found.'); } return next(); },
+  requireCsrf(/** @type {any} */ req, /** @type {any} */ res, /** @type {any} */ next) { if (sessions.verifyCsrf(req.session.cookieValue, req.body?.csrf)) return next(); logger.warn('auth.csrf-refused', { athleteId: req.session.athlete.athlete_id }); return res.status(403).type('text').send('This form has expired. Reload the page and try again.'); },
+}; }
