@@ -46,6 +46,65 @@ A single Node.js/Express service with three responsibilities:
 3. **Message logic** — fetches the activity, checks/appends the message,
    writes it back via the Strava API.
 
+The service is a single process with no external queue or worker — "async
+processing" of a webhook event means the handler returns the HTTP response
+before awaiting the Strava API calls that follow, not that work is handed
+off to a separate process. This keeps the deployment to one container with
+no message broker, appropriate for the request volume of a handful of
+athletes' activities. If volume or reliability needs ever grow past what
+an in-process `setImmediate`/fire-and-forget can handle, that's the point
+to introduce a real job queue — not before.
+
+### Connect flow (sequence)
+
+```
+Athlete          Browser              runsync            Strava
+  |  click Connect  |                    |                  |
+  |----------------->  GET /connect      |                  |
+  |                 |------------------->|                  |
+  |                 |  redirect to Strava OAuth authorize    |
+  |                 |<-------------------|                  |
+  |                 |---------------------------------------->
+  |                 |         authorize (scope grant)         |
+  |                 |<----------------------------------------|
+  |                 |  redirect to /oauth/callback?code=...   |
+  |                 |------------------->|                  |
+  |                 |                    |  exchange code    |
+  |                 |                    |----------------->|
+  |                 |                    |  access+refresh   |
+  |                 |                    |<-----------------|
+  |                 |                    | upsert athletes  |
+  |                 |                    | row (SQLite)     |
+  |                 |  "Connected!" page |                  |
+  |                 |<-------------------|                  |
+```
+
+### Webhook flow (sequence)
+
+```
+Garmin/Strava        Strava            runsync           SQLite
+     |  activity synced  |                 |                |
+     |------------------>|                 |                |
+     |                    | POST /webhook  |                |
+     |                    |--------------->|                |
+     |                    |   200 OK       |                |
+     |                    |<---------------|                |
+     |                    |                | lookup owner_id|
+     |                    |                |--------------->|
+     |                    |                |<---------------|
+     |                    |  refresh token (if expired)      |
+     |                    |<-------------->|                |
+     |                    |  GET /activities/{id}            |
+     |                    |<-------------->|                |
+     |                    |  [already has message? stop]     |
+     |                    |  PUT /activities/{id}            |
+     |                    |<-------------->|                |
+```
+
+The two sequences share the `athletes` table and the token-refresh path in
+`lib/strava.js`, but otherwise don't interact — the connect flow only ever
+writes a row, the webhook flow only ever reads/refreshes one.
+
 ### Components
 
 - `server.js` — Express app entry point, wires up routes below.
@@ -158,6 +217,29 @@ Environment variables:
   /api/v3/push_subscriptions`), not something the app needs to do at
   runtime — a setup step done manually or via a small one-off script after
   first deploy.
+
+## API access requirements
+
+As of mid-2026, Strava changed developer API terms in ways that directly
+affect this project's ongoing cost and ceiling:
+
+- **Standard Tier subscription requirement:** any Standard Tier app (which
+  covers this project) requires the *developer* — not each connected
+  athlete — to maintain an active Strava subscription ($11.99/mo). This is
+  a new recurring cost of running the service, separate from VPS hosting.
+- **10-user cap:** Standard Tier apps start capped at 10 connected
+  athletes, self-service with no review. This comfortably covers "owner +
+  a few others."
+- **Growing past 10 users:** requires requesting a bump to the higher
+  Standard Tier level (up to 9,999 users), which goes through Strava
+  review with no committed turnaround SLA — not a same-day dashboard
+  toggle. Worth knowing before promising a connect link to a wider group.
+  If usage ever needs to scale beyond that, Extended Access Tier (10,000+
+  users) is a separate, case-by-case admission process, not relevant at
+  this project's scale.
+- **Comments still unsupported:** confirms the Non-goals decision above —
+  no tier or subscription level exposes comment creation via the public
+  API.
 
 ## Testing
 
