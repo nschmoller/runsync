@@ -163,6 +163,38 @@ athletes
      the existing description (preserve whatever the athlete already
      wrote; append on a new line).
 
+## Concurrency: overlapping webhook events for the same activity
+
+The service is single-process, but not single-threaded in effect — each
+webhook handler is `async` and yields the event loop on every `await`
+(SQLite lookup, token refresh, the `GET` then `PUT` to Strava). If a
+second event for the same activity arrives while the first is still
+mid-flight (e.g. Strava fires `create` immediately followed by an
+`update`, which happens in practice), Node interleaves the two handlers
+rather than running them strictly one after another.
+
+This creates a race the idempotency check alone doesn't cover:
+
+1. Event A: `GET` activity → description doesn't have the message yet.
+2. Event B: `GET` activity → also doesn't have it yet (A hasn't written).
+3. Event A: `PUT` with message appended.
+4. Event B: `PUT` with message appended again → duplicate.
+
+The "append only if missing" check protects against reprocessing the
+*same* event twice (e.g. a delivery retry), but not against two
+*different* events for the same activity both passing the check before
+either has written.
+
+**Fix:** serialize processing per `object_id`. Maintain an in-memory `Map`
+of `object_id -> Promise` in the webhook handler; if an event for an
+`object_id` already has processing in flight, chain the new event's work
+onto that promise instead of starting a fresh `GET` immediately. This
+needs no external lock or queue — a single process is enough to make the
+per-activity ordering hold — and the map naturally resets on restart
+(acceptable since in-flight work is idempotent-safe to redo after a
+crash). Different activities/athletes never share a map key, so this adds
+no serialization across unrelated events.
+
 ## Event filtering
 
 Both `aspect_type: create` and `aspect_type: update` are accepted and
@@ -247,6 +279,8 @@ affect this project's ongoing cost and ceiling:
   logic with the idempotency check) using a mocked HTTP client.
 - Unit tests for the webhook handler: verifies immediate `200` response,
   correct filtering of non-activity events, correct athlete lookup.
+- Unit test for the per-activity serialization: two overlapping events for
+  the same `object_id` must result in exactly one `PUT` call.
 - Manual end-to-end test: connect a real (test) Strava account through
   `/connect`, upload/edit an activity, confirm the message appears once
   and isn't duplicated on a subsequent edit.
