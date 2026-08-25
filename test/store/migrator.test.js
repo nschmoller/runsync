@@ -40,7 +40,7 @@ test('applies migrations in numeric order, not lexicographic', () => {
 });
 
 test('openDatabase creates the file with mode 0600 and a working schema', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'runsync-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'racegoal-'));
   const file = path.join(dir, 'data.sqlite');
   try {
     const db = openDatabase(file);
@@ -55,7 +55,7 @@ test('openDatabase creates the file with mode 0600 and a working schema', () => 
 });
 
 test('openDatabase reopens an existing database without re-migrating', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'runsync-'));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'racegoal-'));
   const file = path.join(dir, 'data.sqlite');
   try {
     openDatabase(file).close();

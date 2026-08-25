@@ -6,17 +6,17 @@ const valid = {
   STRAVA_CLIENT_ID: '12345',
   STRAVA_CLIENT_SECRET: 'secret',
   STRAVA_WEBHOOK_VERIFY_TOKEN: 'verify',
-  APPEND_MESSAGE: '🏃 Synced via runsync',
+  APPEND_MESSAGE: '🏃 Synced via racegoal',
   SESSION_SECRET: 'a'.repeat(32),
-  BASE_URL: 'https://runsync.example.com',
-  SUPPORT_EMAIL: 'support@runsync.example.com',
+  BASE_URL: 'https://racegoal.example.com',
+  SUPPORT_EMAIL: 'support@racegoal.example.com',
 };
 
 test('loads a valid environment', () => {
   const config = loadConfig(valid);
   assert.equal(config.clientId, '12345');
-  assert.equal(config.appendMessage, '🏃 Synced via runsync');
-  assert.equal(config.baseUrl, 'https://runsync.example.com');
+  assert.equal(config.appendMessage, '🏃 Synced via racegoal');
+  assert.equal(config.baseUrl, 'https://racegoal.example.com');
   assert.equal(config.logLevel, 'info');
 });
 
@@ -68,7 +68,7 @@ test('rejects an unknown LOG_LEVEL', () => {
 });
 
 test('loads a valid SUPPORT_EMAIL', () => {
-  assert.equal(loadConfig(valid).supportEmail, 'support@runsync.example.com');
+  assert.equal(loadConfig(valid).supportEmail, 'support@racegoal.example.com');
 });
 
 test('rejects a SUPPORT_EMAIL missing an @ or a domain', () => {

@@ -3,7 +3,8 @@ import assert from 'node:assert/strict';
 import { decidePreFetch, decidePostFetch, startedAt } from '../../src/domain/rules.js';
 
 /** @type {any} */
-const config = { appendMessage: '🏃 Synced via runsync', sportTypes: new Set(['Run', 'TrailRun']) };
+const config = { appendMessage: '🏃 Synced via racegoal', sportTypes: new Set(['Run', 'TrailRun']) };
+const goal = (/** @type {string} */ message) => `- - - 🎯 Goal - - -\n${message}`;
 const CUTOFF = 1_700_000_000;
 
 /** @type {(overrides?: any) => any} */
@@ -42,7 +43,7 @@ test('the revoked check wins over the processed check, so a dead athlete never l
 
 test('appends to a run after the cutoff', () => {
   const decision = decidePostFetch({ athlete: athlete(), activity: activity(), config });
-  assert.deepEqual(decision, { action: 'append', description: 'Great run!\n\n🏃 Synced via runsync' });
+  assert.deepEqual(decision, { action: 'append', description: `Great run!\n\n${goal('🏃 Synced via racegoal')}` });
 });
 
 test('uses the athlete own message when they have one', () => {
@@ -50,7 +51,7 @@ test('uses the athlete own message when they have one', () => {
     athlete: athlete({ message: 'Powered by stubbornness' }), activity: activity(), config,
   });
   // @ts-ignore - decision is guaranteed to have action: 'append' in this context
-  assert.equal(decision.description, 'Great run!\n\nPowered by stubbornness');
+  assert.equal(decision.description, `Great run!\n\n${goal('Powered by stubbornness')}`);
 });
 
 test('skips an activity before the cutoff, including on a later edit', () => {
@@ -90,7 +91,7 @@ test('accepts TrailRun, which is in the default allowlist', () => {
 test('records without a PUT when the description already contains the message', () => {
   const decision = decidePostFetch({
     athlete: athlete(),
-    activity: activity({ description: 'Great run!\n\n🏃 Synced via runsync' }),
+    activity: activity({ description: `Great run!\n\n${goal('🏃 Synced via racegoal')}` }),
     config,
   });
   assert.deepEqual(decision, { action: 'record', reason: 'backfill' });
@@ -99,7 +100,7 @@ test('records without a PUT when the description already contains the message', 
 test('does not append twice when the athlete typed text after the message', () => {
   const decision = decidePostFetch({
     athlete: athlete(),
-    activity: activity({ description: '🏃 Synced via runsync\n\nsplit negative!' }),
+    activity: activity({ description: `${goal('🏃 Synced via racegoal')}\n\nsplit negative!` }),
     config,
   });
   assert.equal(decision.action, 'record');
@@ -108,7 +109,7 @@ test('does not append twice when the athlete typed text after the message', () =
 test('appends onto an empty description without a leading blank line', () => {
   const decision = decidePostFetch({ athlete: athlete(), activity: activity({ description: null }), config });
   // @ts-ignore - decision is guaranteed to have action: 'append' in this context
-  assert.equal(decision.description, '🏃 Synced via runsync');
+  assert.equal(decision.description, goal('🏃 Synced via racegoal'));
 });
 
 test('startedAt converts an ISO date to unix seconds', () => {

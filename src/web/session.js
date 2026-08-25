@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-export const COOKIE_NAME = 'runsync_session';
+export const COOKIE_NAME = 'racegoal_session';
 export const MAX_AGE_SECONDS = 30 * 24 * 3600;
 /** @param {string} secret @param {string} value */
 const hmac = (secret, value) => crypto.createHmac('sha256', secret).update(value).digest('base64url');

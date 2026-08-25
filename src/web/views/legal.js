@@ -6,9 +6,9 @@ const RETENTION_DAYS = RETENTION_SECONDS / (24 * 3600);
 
 /** @param {{config: {appendMessage: string, supportEmail: string, sportTypes: Set<string>}}} input */
 export function renderPrivacyPage({ config }) {
-  return page('Privacy — runsync', html`
+  return page('Privacy — racegoal', html`
     <h1>Privacy notice</h1>
-    <p>runsync is a small, self-hosted tool that appends your chosen message to
+    <p>racegoal is a small, self-hosted tool that appends your chosen message to
     the description of your new ${[...config.sportTypes].join(' and ')} activities.</p>
 
     <h2>What we collect</h2>
@@ -46,7 +46,7 @@ export function renderPrivacyPage({ config }) {
 
 /** @param {{config: {supportEmail: string}}} input */
 export function renderSupportPage({ config }) {
-  return page('Support — runsync', html`
+  return page('Support — racegoal', html`
     <h1>Support</h1>
     <p>Questions, problems, or a data deletion request that you cannot
     complete from your <a href="/dashboard">dashboard</a>:

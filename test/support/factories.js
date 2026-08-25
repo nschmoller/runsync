@@ -44,15 +44,15 @@ export function testConfig(overrides = {}) {
     clientSecret: 'secret',
     webhookVerifyToken: 'verify',
     subscriptionId: 77,
-    appendMessage: '🏃 Synced via runsync',
+    appendMessage: '🏃 Synced via racegoal',
     sportTypes: new Set(['Run', 'TrailRun']),
     sessionSecret: 'a'.repeat(32),
-    baseUrl: 'https://runsync.example.com',
+    baseUrl: 'https://racegoal.example.com',
     port: 3000,
     dbPath: ':memory:',
     adminAthleteIds: new Set(),
     logLevel: /** @type {const} */ ('info'),
-    supportEmail: 'support@runsync.example.com',
+    supportEmail: 'support@racegoal.example.com',
     ...overrides,
   };
 }

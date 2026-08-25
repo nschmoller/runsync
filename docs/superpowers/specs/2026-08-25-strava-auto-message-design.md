@@ -5,7 +5,7 @@
 Strava's public API does not allow apps to create comments on activities
 (comment creation is not exposed; only reading comments is). The closest
 automatable equivalent is editing the activity's **description** at upload
-time. This project builds a small self-hosted service ("runsync") that
+time. This project builds a small self-hosted service ("racegoal") that
 automatically appends a fixed message to the description of every new
 running activity for a small set of athletes.
 
@@ -117,7 +117,7 @@ record rather than from the callback's query string.
 ### Connect flow (sequence)
 
 ```
-Athlete          Browser              runsync            Strava
+Athlete          Browser              racegoal            Strava
   |  invite link    |                    |                  |
   |----------------->  GET /connect?invite=tok              |
   |                 |------------------->|                  |
@@ -155,7 +155,7 @@ Athlete          Browser              runsync            Strava
 ### Webhook flow (sequence)
 
 ```
-Garmin/Strava        Strava            runsync           SQLite
+Garmin/Strava        Strava            racegoal           SQLite
      |  activity synced  |                 |                |
      |------------------>|                 |                |
      |                    | POST /webhook  |                |
@@ -404,7 +404,7 @@ Applied identically on `POST /connect` and `POST /dashboard/message`:
   `APPEND_MESSAGE` value rather than hardcoded in the template, so the two
   can never drift apart:
 
-  > Leave blank to use the default message: `🏃 Synced via runsync`
+  > Leave blank to use the default message: `🏃 Synced via racegoal`
 
   The point is that "leave blank for the default" alone is useless — the
   athlete cannot consent to text they have not been shown. Quoting it means
@@ -675,7 +675,7 @@ Environment variables:
   `scripts/create-subscription.js`; incoming events must match it.
 - `APPEND_MESSAGE` — default message, used to prefill the connect page and
   as the fallback for any athlete whose `message` is `NULL` (placeholder
-  for now, e.g. `"🏃 Synced via runsync"`; swap in real copy before first
+  for now, e.g. `"🏃 Synced via racegoal"`; swap in real copy before first
   deploy). Changing it retroactively changes the effective message for
   every athlete still on the default — deliberate, but worth knowing before
   editing it on a running deployment.

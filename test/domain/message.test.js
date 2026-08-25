@@ -1,10 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  validateMessage, resolveMessage, hasMessage, appendMessage, MAX_MESSAGE_LENGTH,
+  validateMessage, resolveMessage, hasMessage, appendMessage, MAX_MESSAGE_LENGTH, GOAL_DIVIDER,
 } from '../../src/domain/message.js';
 
-const config = { appendMessage: '🏃 Synced via runsync' };
+const config = { appendMessage: '🏃 Synced via racegoal' };
 
 test('trims surrounding whitespace', () => {
   assert.deepEqual(validateMessage('  hello  '), { ok: true, value: 'hello' });
@@ -40,13 +40,13 @@ test('normalizes CRLF and collapses runs of blank lines', () => {
   assert.deepEqual(validateMessage('a\r\nb\n\n\n\nc'), { ok: true, value: 'a\nb\n\nc' });
 });
 
-test('resolveMessage falls back to the configured default only when the athlete has none', () => {
-  assert.equal(resolveMessage({ message: null }, config), '🏃 Synced via runsync');
-  assert.equal(resolveMessage({ message: 'mine' }, config), 'mine');
+test('resolveMessage marks the configured or athlete goal with a clear divider', () => {
+  assert.equal(resolveMessage({ message: null }, config), `${GOAL_DIVIDER}\n🏃 Synced via racegoal`);
+  assert.equal(resolveMessage({ message: 'mine' }, config), `${GOAL_DIVIDER}\nmine`);
 });
 
 test('hasMessage matches anywhere, not only at the end', () => {
-  const msg = '🏃 Synced via runsync';
+  const msg = '🏃 Synced via racegoal';
   assert.equal(hasMessage(`Great run!\n\n${msg}`, msg), true);
   assert.equal(hasMessage(`${msg}\n\nadded this later`, msg), true, 'includes, not endsWith');
   assert.equal(hasMessage('Great run!', msg), false);

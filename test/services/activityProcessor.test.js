@@ -63,7 +63,7 @@ test('appends the message to a run after the cutoff', async () => {
   assert.equal(await processor.process(activityJob(987654, 555)), 'appended');
 
   assert.equal(calls.put, 1);
-  assert.deepEqual(calls.updates, [{ id: 555, description: 'Great run!\n\n🏃 Synced via runsync' }]);
+  assert.deepEqual(calls.updates, [{ id: 555, description: 'Great run!\n\n- - - 🎯 Goal - - -\n🏃 Synced via racegoal' }]);
   assert.equal(activityStore.isProcessed(555), true);
 
   const athlete = athleteStore.get(987654);
@@ -76,7 +76,7 @@ test('appends the message to a run after the cutoff', async () => {
 test('uses the athlete own message', async () => {
   const { processor, calls } = setup({ athlete: { message: 'Powered by stubbornness' } });
   await processor.process(activityJob(987654, 555));
-  assert.deepEqual(calls.updates, [{ id: 555, description: 'Great run!\n\nPowered by stubbornness' }]);
+  assert.deepEqual(calls.updates, [{ id: 555, description: 'Great run!\n\n- - - 🎯 Goal - - -\nPowered by stubbornness' }]);
 });
 
 test('drops an unknown athlete without spending a request', async () => {
@@ -123,7 +123,7 @@ test('a skipped activity is not recorded as processed, so a later fix can still 
 
 test('back-fills the record without a PUT when the description already has the message', async () => {
   const { processor, activityStore, calls } = setup({
-    activity: { ...RUN, description: 'Great run!\n\n🏃 Synced via runsync' },
+    activity: { ...RUN, description: 'Great run!\n\n- - - 🎯 Goal - - -\n🏃 Synced via racegoal' },
   });
   assert.equal(await processor.process(activityJob(987654, 555)), 'backfill');
   assert.equal(calls.put, 0);
@@ -132,7 +132,7 @@ test('back-fills the record without a PUT when the description already has the m
 
 test('does not append twice when the athlete typed text after the message', async () => {
   const { processor, calls } = setup({
-    activity: { ...RUN, description: '🏃 Synced via runsync\n\nsplit negative!' },
+    activity: { ...RUN, description: '- - - 🎯 Goal - - -\n🏃 Synced via racegoal\n\nsplit negative!' },
   });
   assert.equal(await processor.process(activityJob(987654, 555)), 'backfill');
   assert.equal(calls.put, 0);
