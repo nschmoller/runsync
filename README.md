@@ -31,6 +31,27 @@ Build with `docker build -t runsync .`. Run it with a mounted `/data` volume and
 
 After the callback is public, run `npm run create-subscription`; set the printed `STRAVA_SUBSCRIPTION_ID` and restart. Create athlete links with `npm run mint-invite`; each is single-use and expires after seven days.
 
+### Production deployment
+
+Runsync is deployed on Harbor through Coolify at `https://runsync.s7r.nl`.
+Coolify builds the repository Dockerfile, routes HTTPS traffic to port 3000, and
+checks `/healthz`. The `runsync-data` persistent volume is mounted at `/data`.
+
+Keep every application setting runtime-only in Coolify. Runsync does not need
+any configuration while the image is built, and marking credentials as build
+variables can expose them in build output. The runtime-only settings include
+the Strava client secret, session secret, webhook verification token, and
+subscription ID.
+
+The Strava webhook subscription has been created for
+`https://runsync.s7r.nl/webhook`; its ID is stored in Coolify as
+`STRAVA_SUBSCRIPTION_ID`. Replacing that subscription deletes any existing
+subscription for the same Strava app, so do this only deliberately.
+
+To mint an invite in production, run `node scripts/mint-invite.js` inside the
+running Runsync container. It prints a single-use URL that expires after seven
+days. The invite-to-Strava connection flow was confirmed on 2026-08-25.
+
 ### Pre-production checklist
 
 - [ ] Active Strava tier eligibility confirmed, and connected-athlete count is within the tier's cap (Standard Tier: 10).
