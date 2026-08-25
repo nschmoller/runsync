@@ -1,0 +1,27 @@
+{
+  "name": "runsync",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test test/*.test.js",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run typecheck && npm test",
+    "mint-invite": "node scripts/mint-invite.js",
+    "create-subscription": "node scripts/create-subscription.js"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.5.0",
+    "cookie": "^1.0.1",
+    "express": "^5.0.1"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.11",
+    "@types/express": "^5.0.0",
+    "@types/node": "^24.0.0",
+    "typescript": "^5.6.0",
+    "undici": "^6.20.0"
+  }
+}
