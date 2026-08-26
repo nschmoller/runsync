@@ -4,11 +4,11 @@ import { RETENTION_SECONDS } from '../../domain/retention.js';
 
 const RETENTION_DAYS = RETENTION_SECONDS / (24 * 3600);
 
-/** @param {{config: {appendMessage: string, supportEmail: string, sportTypes: Set<string>}}} input */
-export function renderPrivacyPage({ config }) {
+/** @param {{config: {appendMessage: string, supportEmail: string, sportTypes: Set<string>}, loginUrl?:string|null, loggedIn?:boolean}} input */
+export function renderPrivacyPage({ config, loginUrl = null, loggedIn = false }) {
   return page('Privacy — racegoal', html`
     <h1>Privacy notice</h1>
-    <p>racegoal is a small, self-hosted tool that appends your chosen message to
+    <p>racegoal is a small tool that appends your chosen message to
     the description of your new ${[...config.sportTypes].join(' and ')} activities.</p>
 
     <h2>What we collect</h2>
@@ -30,8 +30,8 @@ export function renderPrivacyPage({ config }) {
     training, or disclosure to any third party.</p>
 
     <h2>Where it's stored</h2>
-    <p>In a single SQLite file on the server operator's own infrastructure,
-    readable only by the service process (file mode <code>0600</code>).</p>
+    <p>On our own infrastructure. We do not use third-party data processors
+    to store your information.</p>
 
     <h2>Withdrawing consent or requesting deletion</h2>
     <p>Disconnect at any time from your <a href="/dashboard">dashboard</a>,
@@ -41,11 +41,11 @@ export function renderPrivacyPage({ config }) {
     30 days at the latest.</p>
 
     <p>See <a href="/support">Support</a> for how to reach us.</p>
-  `, { config });
+  `, { config, loginUrl, loggedIn });
 }
 
-/** @param {{config: {supportEmail: string}}} input */
-export function renderSupportPage({ config }) {
+/** @param {{config: {supportEmail: string}, loginUrl?:string|null, loggedIn?:boolean}} input */
+export function renderSupportPage({ config, loginUrl = null, loggedIn = false }) {
   return page('Support — racegoal', html`
     <h1>Support</h1>
     <p>Questions, problems, or a data deletion request that you cannot
@@ -53,5 +53,5 @@ export function renderSupportPage({ config }) {
     <a href="mailto:${config.supportEmail}">${config.supportEmail}</a>.</p>
     <p>See our <a href="/privacy">Privacy notice</a> for what we collect and
     why.</p>
-  `, { config });
+  `, { config, loginUrl, loggedIn });
 }

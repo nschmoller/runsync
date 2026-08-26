@@ -1,10 +1,10 @@
 import express from 'express';
 import { renderHomePage } from '../views/home.js';
-import { loginHref } from '../../domain/localDev.js';
+import { headerContext } from '../viewHelpers.js';
 
-/** @param {{config:any}} deps */
-export function homeRouter({ config }) {
+/** @param {{config:any,sessions:any,clock:import('../../ports/index.js').Clock}} deps */
+export function homeRouter({ config, sessions, clock }) {
   const router = express.Router();
-  router.get('/', (_req, res) => res.type('html').send(renderHomePage({ loginHref: loginHref(config) })));
+  router.get('/', (req, res) => res.type('html').send(renderHomePage(headerContext(req, { config, sessions, clock }))));
   return router;
 }

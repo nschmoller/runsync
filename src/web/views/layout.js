@@ -1,15 +1,15 @@
 import { html, raw } from '../html.js';
 import { MAX_MESSAGE_LENGTH } from '../../domain/message.js';
-/** @param {string|null} loginUrl */
-const siteHeader = (loginUrl) => html`<header class="site-header"><a class="brand" href="/"><img class="brand-mark" src="/app-icon.png" alt="">racegoal</a><nav><a href="/#how-it-works">How it works</a><a href="/privacy">Privacy</a><a href="/support">Support</a>${raw(loginUrl ? html`<a class="nav-login" href="${loginUrl}">Log in</a>` : '')}</nav></header>`;
+/** @param {string|null} loginUrl @param {boolean} loggedIn */
+const siteHeader = (loginUrl, loggedIn) => html`<header class="site-header"><a class="brand" href="/"><img class="brand-mark" src="/app-icon.png" alt="">racegoal</a><nav><a href="/#how-it-works">How it works</a><a href="/privacy">Privacy</a><a href="/support">Support</a>${raw(loggedIn ? html`<a class="nav-login" href="/dashboard">Dashboard</a>` : loginUrl ? html`<a class="nav-login" href="${loginUrl}">Log in</a>` : '')}</nav></header>`;
 /** @param {{supportEmail?:string}|null} config @param {string|null} blurb */
 const siteFooter = (config, blurb) => html`<footer class="home-footer"><span>${raw(blurb ?? (config?.supportEmail ? html`<a href="mailto:${config.supportEmail}">${config.supportEmail}</a>` : ''))}</span><div><a href="/privacy">Privacy</a><a href="/support">Support</a></div></footer>`;
 /**
  * @param {string} title
  * @param {string} body
- * @param {{mainClass?:string,loginUrl?:string|null,config?:{supportEmail?:string}|null,footerBlurb?:string|null}} [options]
+ * @param {{mainClass?:string,loginUrl?:string|null,loggedIn?:boolean,config?:{supportEmail?:string}|null,footerBlurb?:string|null}} [options]
  */
-export const page = (title, body, { mainClass = '', loginUrl = null, config = null, footerBlurb = null } = {}) => html`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f8f4ed"><title>${title}</title><style>
+export const page = (title, body, { mainClass = '', loginUrl = null, loggedIn = false, config = null, footerBlurb = null } = {}) => html`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f8f4ed"><title>${title}</title><style>
   :root { color: #1b2430; background: #f8f4ed; font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-synthesis: none; }
   * { box-sizing: border-box; }
   body { margin: 0; min-width: 320px; }
@@ -44,7 +44,7 @@ export const page = (title, body, { mainClass = '', loginUrl = null, config = nu
   .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; margin-top: 44px; } .step { padding-top: 17px; border-top: 2px solid #f35b3c; } .step-number { color: #c53b7c; font-size: .78rem; font-weight: 800; letter-spacing: .1em; } .step h3 { margin: 16px 0 8px; font-size: 1.13rem; letter-spacing: -.03em; } .step p { margin: 0; color: #66727d; line-height: 1.58; }
   .home-footer { display: flex; justify-content: space-between; gap: 20px; padding: 25px 0 42px; border-top: 1px solid #e0d7cc; color: #68737d; font-size: .86rem; } .home-footer div { display: flex; gap: 18px; }
   @media (max-width: 720px) { .site-shell { width: min(100% - 32px, 1120px); } .site-header { padding: 16px 0; } .site-header nav { gap: 14px; font-size: .84rem; } .hero { grid-template-columns: 1fr; min-height: auto; padding: 39px 0 73px; } .hero h1 { font-size: clamp(3.35rem, 17vw, 5.3rem); } .activity-card { width: calc(100% - 16px); margin: 14px 0 0 4px; } .steps { grid-template-columns: 1fr; gap: 30px; } .how { padding: 60px 0; } .home-footer { flex-direction: column; } }
-</style></head><body><div class="site-shell">${raw(siteHeader(loginUrl))}<main class="${mainClass}">${raw(body)}</main>${raw(siteFooter(config, footerBlurb))}</div></body></html>`;
+</style></head><body><div class="site-shell">${raw(siteHeader(loginUrl, loggedIn))}<main class="${mainClass}">${raw(body)}</main>${raw(siteFooter(config, footerBlurb))}</div></body></html>`;
 /** @param {{config:{appendMessage:string},value?:string|null,error?:string|null}} input */
 export function messageField({ config, value = null, error = null }) { return html`${raw(error ? html`<p class="error">${error}</p>` : '')}<label for="message">Your running goal</label><textarea id="message" name="message" rows="3">${value ?? ''}</textarea><p class="hint">racegoal adds <code>- - - 🎯 Goal - - -</code> above your text. Leave blank to use the default goal: <code>${config.appendMessage}</code><br>Up to ${MAX_MESSAGE_LENGTH} characters.</p>`; }
 /** @param {string} title @param {string} detail */

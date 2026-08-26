@@ -8,6 +8,7 @@
   },
   "scripts": {
     "start": "node src/server.js",
+    "dev": "node --watch --env-file=.env src/server.js",
     "test": "node --test test/**/*.test.js test/*.test.js",
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm test",

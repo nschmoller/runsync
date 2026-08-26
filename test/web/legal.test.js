@@ -1,15 +1,17 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { testConfig } from '../support/factories.js';
+import { testConfig, fixedClock, NOW } from '../support/factories.js';
 import { legalRouter } from '../../src/web/routes/legal.js';
+import { createSessions } from '../../src/web/session.js';
 import express from 'express';
 import { request } from '../support/app.js';
 
 function setup() {
   const config = testConfig();
+  const sessions = createSessions(config.sessionSecret);
   const app = express();
-  app.use(legalRouter({ config }));
-  return { app, config };
+  app.use(legalRouter({ config, sessions, clock: fixedClock(NOW) }));
+  return { app, config, sessions };
 }
 
 test('the privacy page discloses collection, purpose, storage, and deletion', async () => {
@@ -20,6 +22,13 @@ test('the privacy page discloses collection, purpose, storage, and deletion', as
   assert.match(body, /7 days/);
   assert.match(body, new RegExp(config.supportEmail));
   assert.match(body, /dashboard/);
+});
+
+test('the privacy page header shows a dashboard link when a valid session cookie is present', async () => {
+  const { app, sessions } = setup();
+  const cookie = `${sessions.COOKIE_NAME}=${encodeURIComponent(sessions.sign(987654, NOW + 60))}`;
+  const body = await (await request(app, '/privacy', { headers: { cookie } })).text();
+  assert.match(body, /href="\/dashboard"[^>]*>Dashboard</);
 });
 
 test('the support page links back to the privacy notice and the support address', async () => {

@@ -1,4 +1,7 @@
 import * as cookie from 'cookie';
+/** Whether the request carries a valid, unexpired session cookie — for pages that vary their content by login state without requiring it (e.g. showing a "Dashboard" link in the header).
+ * @param {any} req @param {{sessions:any, clock: import('../../ports/index.js').Clock}} deps */
+export function isLoggedIn(req, { sessions, clock }) { const value = cookie.parse(req.headers.cookie ?? '')[sessions.COOKIE_NAME]; return sessions.verify(value, clock.now()) !== null; }
 /** @param {{sessions:any, athleteStore: import('../../ports/index.js').AthleteStore, config: import('../../ports/index.js').Config, clock: import('../../ports/index.js').Clock, logger: import('../../ports/index.js').Logger}} deps */
 export function createAuth({ sessions, athleteStore, config, clock, logger }) { return {
   requireAthlete(/** @type {any} */ req, /** @type {any} */ res, /** @type {any} */ next) { const value = cookie.parse(req.headers.cookie ?? '')[sessions.COOKIE_NAME]; const id = sessions.verify(value, clock.now()); const athlete = id === null ? undefined : athleteStore.get(id); if (!athlete) return res.redirect(302, '/login'); req.session = { athlete, cookieValue: value }; return next(); },
