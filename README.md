@@ -54,11 +54,11 @@ deliberately.
 ### Domain migration to racegoal.app
 
 Complete. `racegoal.app` is live with a valid Let's Encrypt cert, DNS and the
-Coolify app domain point to it, and `BASE_URL` is set to `https://racegoal.app`.
-The old `runsync.s7r.nl` domain is still active in Coolify as a fallback;
-remove it once the Strava Authorization Callback Domain has also been updated
-to `racegoal.app` (manual, in the Strava developer dashboard — no API for it)
-and end-to-end OAuth/webhook delivery is confirmed on the new domain.
+Coolify app domain point to it, `BASE_URL` is set to `https://racegoal.app`,
+and the Strava app's Authorization Callback Domain has been updated to
+`racegoal.app`. The old `runsync.s7r.nl` domain is still active in Coolify as
+a fallback; remove it once end-to-end OAuth/webhook delivery is confirmed on
+the new domain.
 
 To mint an invite in production, run `node scripts/mint-invite.js` inside the
 running Racegoal container. It prints a single-use URL that expires after seven
