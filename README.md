@@ -33,12 +33,11 @@ After the callback is public, run `npm run create-subscription`; set the printed
 
 ### Production deployment
 
-Racegoal is deployed on Harbor through Coolify, currently reachable at
-`https://runsync.s7r.nl` pending migration to the registered `racegoal.app`
-domain (DNS, Coolify app domain, and the Strava app's Authorization Callback
-Domain all still need updating — see the migration checklist below).
-Coolify builds the repository Dockerfile, routes HTTPS traffic to port 3000, and
-checks `/healthz`. The `racegoal-data` persistent volume is mounted at `/data`.
+Racegoal is deployed on Harbor through Coolify, reachable at
+`https://racegoal.app` (the old `https://runsync.s7r.nl` domain still resolves
+to the same app during the transition). Coolify builds the repository
+Dockerfile, routes HTTPS traffic to port 3000, and checks `/healthz`. The
+`racegoal-data` persistent volume is mounted at `/data`.
 
 Keep every application setting runtime-only in Coolify. Racegoal does not need
 any configuration while the image is built, and marking credentials as build
@@ -46,21 +45,20 @@ variables can expose them in build output. The runtime-only settings include
 the Strava client secret, session secret, webhook verification token, and
 subscription ID.
 
-The Strava webhook subscription has been created for
-`https://runsync.s7r.nl/webhook`; its ID is stored in Coolify as
-`STRAVA_SUBSCRIPTION_ID`. Replacing that subscription deletes any existing
-subscription for the same Strava app, so do this only deliberately.
+The Strava webhook subscription was originally created for
+`https://runsync.s7r.nl/webhook` and continues delivering to that URL; its ID
+is stored in Coolify as `STRAVA_SUBSCRIPTION_ID`. Replacing that subscription
+deletes any existing subscription for the same Strava app, so do this only
+deliberately.
 
 ### Domain migration to racegoal.app
 
-`racegoal.app` is registered but not yet live. To cut over:
-
-1. **DNS** — at the `racegoal.app` registrar, add an A/AAAA (or CNAME, if Coolify fronts with a proxy) record pointing to the same target `runsync.s7r.nl` currently resolves to.
-2. **Coolify** — in the app's Domains settings, add `racegoal.app` alongside the existing domain so Coolify issues a certificate and starts routing it; keep the old domain active until the Strava side is confirmed working, then remove it.
-3. **Strava app settings** (developers.strava.com, this app's settings page) — update **Authorization Callback Domain** to `racegoal.app`. This is manual in Strava's dashboard; there is no API for it. Existing connected athletes' refresh tokens are unaffected by this change, but new OAuth attempts will fail until it's updated.
-4. **Environment** — update `BASE_URL` to `https://racegoal.app` in Coolify's runtime env vars, then redeploy.
-5. **Webhook subscription** — Strava webhook subscriptions are tied to the callback URL's host implicitly only through delivery, not validation, so the existing subscription keeps delivering to whatever `BASE_URL`-derived webhook URL Strava was given at creation time; **do not** recreate the subscription for a bare domain change (see the warning above) — verify webhook delivery still works after the `BASE_URL` change, and only recreate the subscription if it doesn't.
-6. Once `racegoal.app` is confirmed working end-to-end (OAuth connect, dashboard, webhook delivery), remove the old `runsync.s7r.nl` domain from Coolify.
+Complete. `racegoal.app` is live with a valid Let's Encrypt cert, DNS and the
+Coolify app domain point to it, and `BASE_URL` is set to `https://racegoal.app`.
+The old `runsync.s7r.nl` domain is still active in Coolify as a fallback;
+remove it once the Strava Authorization Callback Domain has also been updated
+to `racegoal.app` (manual, in the Strava developer dashboard — no API for it)
+and end-to-end OAuth/webhook delivery is confirmed on the new domain.
 
 To mint an invite in production, run `node scripts/mint-invite.js` inside the
 running Racegoal container. It prints a single-use URL that expires after seven
