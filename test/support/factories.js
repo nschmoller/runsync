@@ -53,6 +53,11 @@ export function testConfig(overrides = {}) {
     adminAthleteIds: new Set(),
     logLevel: /** @type {const} */ ('info'),
     supportEmail: 'support@racegoal.example.com',
+    smtpHost: 'smtp.example.com',
+    smtpPort: 587,
+    smtpUser: 'smtp-user',
+    smtpPass: 'smtp-pass',
+    mailFrom: 'noreply@schmoller.nl',
     ...overrides,
   };
 }

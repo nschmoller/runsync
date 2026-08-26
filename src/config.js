@@ -1,3 +1,5 @@
+import { isValidEmail } from './domain/email.js';
+
 /** @typedef {import('./ports/index.js').Config} Config */
 
 const REQUIRED = [
@@ -8,9 +10,12 @@ const REQUIRED = [
   'SESSION_SECRET',
   'BASE_URL',
   'SUPPORT_EMAIL',
+  'SMTP_HOST',
+  'SMTP_PORT',
+  'SMTP_USER',
+  'SMTP_PASS',
+  'MAIL_FROM',
 ];
-
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const DEFAULT_SPORT_TYPES = 'Run,TrailRun';
 const MIN_SECRET_LENGTH = 32;
@@ -50,8 +55,18 @@ export function loadConfig(env = process.env) {
   }
 
   const supportEmail = /** @type {string} */ (env.SUPPORT_EMAIL);
-  if (!EMAIL_PATTERN.test(supportEmail)) {
+  if (!isValidEmail(supportEmail)) {
     throw new Error('SUPPORT_EMAIL must be a valid email address');
+  }
+
+  const mailFrom = /** @type {string} */ (env.MAIL_FROM);
+  if (!isValidEmail(mailFrom)) {
+    throw new Error('MAIL_FROM must be a valid email address');
+  }
+
+  const smtpPort = Number(env.SMTP_PORT);
+  if (!Number.isInteger(smtpPort) || smtpPort <= 0) {
+    throw new Error('SMTP_PORT must be a positive integer');
   }
 
   return {
@@ -68,5 +83,10 @@ export function loadConfig(env = process.env) {
     adminAthleteIds,
     logLevel: /** @type {'debug'|'info'|'warn'|'error'} */ (logLevel),
     supportEmail,
+    smtpHost: /** @type {string} */ (env.SMTP_HOST),
+    smtpPort,
+    smtpUser: /** @type {string} */ (env.SMTP_USER),
+    smtpPass: /** @type {string} */ (env.SMTP_PASS),
+    mailFrom,
   };
 }

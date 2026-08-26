@@ -10,6 +10,11 @@ const valid = {
   SESSION_SECRET: 'a'.repeat(32),
   BASE_URL: 'https://racegoal.example.com',
   SUPPORT_EMAIL: 'support@racegoal.example.com',
+  SMTP_HOST: 'smtp.example.com',
+  SMTP_PORT: '587',
+  SMTP_USER: 'smtp-user',
+  SMTP_PASS: 'smtp-pass',
+  MAIL_FROM: 'noreply@schmoller.nl',
 };
 
 test('loads a valid environment', () => {
@@ -73,4 +78,21 @@ test('loads a valid SUPPORT_EMAIL', () => {
 
 test('rejects a SUPPORT_EMAIL missing an @ or a domain', () => {
   assert.throws(() => loadConfig({ ...valid, SUPPORT_EMAIL: 'not-an-email' }), /SUPPORT_EMAIL/);
+});
+
+test('loads valid SMTP settings', () => {
+  const config = loadConfig(valid);
+  assert.equal(config.smtpHost, 'smtp.example.com');
+  assert.equal(config.smtpPort, 587);
+  assert.equal(config.smtpUser, 'smtp-user');
+  assert.equal(config.smtpPass, 'smtp-pass');
+  assert.equal(config.mailFrom, 'noreply@schmoller.nl');
+});
+
+test('rejects a non-numeric SMTP_PORT', () => {
+  assert.throws(() => loadConfig({ ...valid, SMTP_PORT: 'not-a-number' }), /SMTP_PORT/);
+});
+
+test('rejects a MAIL_FROM missing an @ or a domain', () => {
+  assert.throws(() => loadConfig({ ...valid, MAIL_FROM: 'not-an-email' }), /MAIL_FROM/);
 });

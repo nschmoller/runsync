@@ -18,6 +18,11 @@
  * @property {Set<number>} adminAthleteIds
  * @property {'debug'|'info'|'warn'|'error'} logLevel
  * @property {string} supportEmail
+ * @property {string} smtpHost
+ * @property {number} smtpPort
+ * @property {string} smtpUser
+ * @property {string} smtpPass
+ * @property {string} mailFrom
  */
 
 /**
@@ -144,6 +149,11 @@
  */
 
 /** @typedef {{ accessTokenFor: (athlete: Athlete) => Promise<string> }} TokenProvider */
+
+/**
+ * @typedef {object} Mailer
+ * @property {(input: {to:string, subject:string, text:string}) => Promise<void>} send
+ */
 
 /**
  * Permanent erasure — Strava deauthorization plus deletion of every row this
