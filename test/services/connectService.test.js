@@ -46,7 +46,7 @@ test('first connect consumes the invite, persists the chosen message, and seeds 
   assert.equal(athlete.message, 'Mine');
   assert.equal(athlete.activity_cutoff, timestamp(RIDE.start_date));
   assert.equal(athlete.seed_activity_id, RUN.id);
-  assert.deepEqual(calls.put, [{ id: RUN.id, description: 'Long one\n\nMine' }]);
+  assert.deepEqual(calls.put, [{ id: RUN.id, description: 'Long one\n\n- - - 🎯 Goal - - -\nMine' }]);
   assert.equal(stores.activities.isProcessed(RUN.id), true);
   assert.equal(stores.invites.getUsable('invite', NOW), undefined);
 });

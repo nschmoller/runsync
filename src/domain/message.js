@@ -1,6 +1,7 @@
 /** @typedef {import('../ports/index.js').ValidationResult} ValidationResult */
 
 export const MAX_MESSAGE_LENGTH = 200;
+export const GOAL_DIVIDER = '- - - 🎯 Goal - - -';
 
 // Every C0 control character plus DEL, except newline (0x0A).
 const CONTROL_CHARS = /[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g;
@@ -43,7 +44,7 @@ export function validateMessage(raw) {
  * @returns {string}
  */
 export function resolveMessage(athlete, config) {
-  return athlete.message ?? config.appendMessage;
+  return `${GOAL_DIVIDER}\n${athlete.message ?? config.appendMessage}`;
 }
 
 /**
