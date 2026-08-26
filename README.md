@@ -38,6 +38,9 @@ Racegoal is deployed on Harbor through Coolify, reachable at
 HTTPS traffic to port 3000, and checks `/healthz`. The `racegoal-data`
 persistent volume is mounted at `/data`.
 
+Automatic deploys are enabled: a push to `main` triggers a Coolify build and
+deploy on its own — no manual "Deploy" click or API call needed.
+
 Keep every application setting runtime-only in Coolify. Racegoal does not need
 any configuration while the image is built, and marking credentials as build
 variables can expose them in build output. The runtime-only settings include
