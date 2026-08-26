@@ -3,3 +3,5 @@ data.sqlite
 data.sqlite-*
 .env
 .env.local
+.server.pid
+server.log

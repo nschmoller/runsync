@@ -14,3 +14,12 @@ export function isLocalBaseUrl(baseUrl) {
     return false;
   }
 }
+
+/**
+ * Where a "Log in" / "reconnect" link should point: the real Strava OAuth
+ * flow, or the dev bypass when running against a local BASE_URL.
+ * @param {{baseUrl:string}} config
+ */
+export function loginHref(config) {
+  return isLocalBaseUrl(config.baseUrl) ? '/dev/login' : '/login';
+}

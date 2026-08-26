@@ -1,0 +1,17 @@
+# racegoal
+
+## Keep code DRY
+
+Before writing logic, check whether it (or something close to it) already
+exists elsewhere in `src/`. Extract shared logic into a function instead of
+copy-pasting it across routes/views/services — the `loginHref` helper below
+is the pattern to follow.
+
+## Local dev auth bypass
+
+Any link meant to log an athlete in or reconnect them (dashboard "reconnect",
+homepage "Log in", etc.) must build its href with `loginHref(config)` from
+`src/domain/localDev.js`, never a hardcoded `/login`. It points to the real
+Strava OAuth flow in production and to `/dev/login` (the no-Strava dev
+bypass) when `BASE_URL` is localhost/127.0.0.1. Hardcoding `/login` breaks
+local testing of anything gated behind a session.
