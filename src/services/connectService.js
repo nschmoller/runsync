@@ -1,6 +1,7 @@
 import { ConflictError } from '../domain/errors.js';
 import { resolveMessage, hasMessage, appendMessage } from '../domain/message.js';
 import { computeCutoff, chooseSeedActivity, SEED_PAGE_SIZE } from '../domain/seeding.js';
+import { LOCAL_DEV_INVITE_TOKEN, isLocalBaseUrl } from '../domain/localDev.js';
 
 /** @typedef {import('../ports/index.js').ActivityStore} ActivityStore */
 /** @typedef {import('../ports/index.js').AthleteStore} AthleteStore */
@@ -61,7 +62,8 @@ export function createConnectService({ athleteStore, activityStore, inviteStore,
         return { athleteId: identity.athleteId, isNew: false };
       }
 
-      if (!inviteStore.consume(stored.invite_token, identity.athleteId, clock.now())) {
+      const isLocalDevSignup = stored.invite_token === LOCAL_DEV_INVITE_TOKEN && isLocalBaseUrl(config.baseUrl);
+      if (!isLocalDevSignup && !inviteStore.consume(stored.invite_token, identity.athleteId, clock.now())) {
         throw new ConflictError('This invite link has already been used.');
       }
       athleteStore.insert({
