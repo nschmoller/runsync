@@ -15,3 +15,9 @@ homepage "Log in", etc.) must build its href with `loginHref(config)` from
 Strava OAuth flow in production and to `/dev/login` (the no-Strava dev
 bypass) when `BASE_URL` is localhost/127.0.0.1. Hardcoding `/login` breaks
 local testing of anything gated behind a session.
+
+## Dev server
+
+Once `npm run dev` is started for verification, leave it running — don't
+kill it after checking a change. It auto-restarts on file changes
+(`node --watch`), so it stays useful for the rest of the session.
