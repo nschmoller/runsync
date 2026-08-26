@@ -34,10 +34,9 @@ After the callback is public, run `npm run create-subscription`; set the printed
 ### Production deployment
 
 Racegoal is deployed on Harbor through Coolify, reachable at
-`https://racegoal.app` (the old `https://runsync.s7r.nl` domain still resolves
-to the same app during the transition). Coolify builds the repository
-Dockerfile, routes HTTPS traffic to port 3000, and checks `/healthz`. The
-`racegoal-data` persistent volume is mounted at `/data`.
+`https://racegoal.app`. Coolify builds the repository Dockerfile, routes
+HTTPS traffic to port 3000, and checks `/healthz`. The `racegoal-data`
+persistent volume is mounted at `/data`.
 
 Keep every application setting runtime-only in Coolify. Racegoal does not need
 any configuration while the image is built, and marking credentials as build
@@ -46,19 +45,19 @@ the Strava client secret, session secret, webhook verification token, and
 subscription ID.
 
 The Strava webhook subscription was originally created for
-`https://runsync.s7r.nl/webhook` and continues delivering to that URL; its ID
-is stored in Coolify as `STRAVA_SUBSCRIPTION_ID`. Replacing that subscription
-deletes any existing subscription for the same Strava app, so do this only
-deliberately.
+`https://runsync.s7r.nl/webhook`. That domain has since been removed from
+Coolify; delivery to `https://racegoal.app/webhook` was confirmed working
+before the removal. The subscription ID is stored in Coolify as
+`STRAVA_SUBSCRIPTION_ID`. Replacing that subscription deletes any existing
+subscription for the same Strava app, so do this only deliberately.
 
 ### Domain migration to racegoal.app
 
 Complete. `racegoal.app` is live with a valid Let's Encrypt cert, DNS and the
 Coolify app domain point to it, `BASE_URL` is set to `https://racegoal.app`,
 and the Strava app's Authorization Callback Domain has been updated to
-`racegoal.app`. The old `runsync.s7r.nl` domain is still active in Coolify as
-a fallback; remove it once end-to-end OAuth/webhook delivery is confirmed on
-the new domain.
+`racegoal.app`. End-to-end OAuth was confirmed working, and the old
+`runsync.s7r.nl` domain has been removed from Coolify.
 
 To mint an invite in production, run `node scripts/mint-invite.js` inside the
 running Racegoal container. It prints a single-use URL that expires after seven
