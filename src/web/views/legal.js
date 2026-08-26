@@ -1,4 +1,4 @@
-import { html, raw } from '../html.js';
+import { html } from '../html.js';
 import { page } from './layout.js';
 import { RETENTION_SECONDS } from '../../domain/retention.js';
 
@@ -41,7 +41,7 @@ export function renderPrivacyPage({ config }) {
     30 days at the latest.</p>
 
     <p>See <a href="/support">Support</a> for how to reach us.</p>
-  `);
+  `, { config });
 }
 
 /** @param {{config: {supportEmail: string}}} input */
@@ -53,8 +53,5 @@ export function renderSupportPage({ config }) {
     <a href="mailto:${config.supportEmail}">${config.supportEmail}</a>.</p>
     <p>See our <a href="/privacy">Privacy notice</a> for what we collect and
     why.</p>
-  `);
+  `, { config });
 }
-
-/** @param {{config: {supportEmail: string}}} input */
-export const legalFooter = ({ config }) => raw(html`<p class="footer"><a href="/privacy">Privacy</a> &middot; <a href="/support">Support</a> &middot; <a href="mailto:${config.supportEmail}">${config.supportEmail}</a></p>`);
