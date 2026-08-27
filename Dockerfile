@@ -12,6 +12,7 @@ COPY package.json ./
 COPY src ./src
 COPY scripts ./scripts
 COPY app-icon.png ./app-icon.png
+COPY logo-schmoller.svg ./logo-schmoller.svg
 RUN mkdir -p /data && chown node:node /data
 USER node
 EXPOSE 3000
